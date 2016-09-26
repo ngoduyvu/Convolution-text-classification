@@ -30,11 +30,14 @@ def clean_str(string):
     return string.strip().lower()
 
 # One hot encoding label data
-def label_encoding(labels_docs):
+def label_encoding(labels_docs, multi_label):
     
     labels = np.asarray(labels_docs)                           # Convert normal array to numpy to do one_hot_encoding
     df = pd.DataFrame(labels, columns=['label'])               # Create data frame
-    labels = df['label'].str.get_dummies(sep='*')              # Create dummies from column with multiple values                                                                                            # Process with document more than 1 label 
+    if multi_label:
+        labels = df['label'].str.get_dummies(sep='*')          # Create dummies from column with multiple values                            
+    else:
+        labels = df['label'].str.strip('*').str[0].str.get_dummies()       # Only take one label for each document
     return labels
 
 # Processing Data for Convolution Neural Network
@@ -56,7 +59,7 @@ def separate_data_label(document):
     for doc in doc_list:
         ### Extract Id Documents ###
         id_num = doc.getAttribute("id")
-        ids.append(id_num)
+        ids.append(id_num.encode("utf-8"))
         # The code some home duplicate the first id and store it to the last.
         ids = list(set(ids))                        # Remove duplicate
         codesElement = doc.getElementsByTagName("code")
@@ -70,7 +73,7 @@ def separate_data_label(document):
                 counter = counter + 1                                # Increase counter if the document have more than 1 label                             
         counter = 0        
         label_line = ''.join(label_store)
-        label_docs.append(label_line)
+        label_docs.append(label_line.encode("utf-8"))
         del label_line                              # Delete value to save memory, minimize errors
         label_store[:] = []                         # Clear string
         
@@ -79,13 +82,13 @@ def separate_data_label(document):
         del text_store[:]
         for text in textsElement:
             textData = text.firstChild.data         # Store text data
-            text_store.append(textData.strip())     # Strip detele '/n' character in string
+            text_store.append(textData.encode("utf-8").strip())     # Strip detele '/n' character in string
         text_line = ''.join(text_store)             # Join 2 string for store in one document.
         text_docs.append(text_line)
         del text_line                               # Delete value to save memory, minimize errors
     for idx, item in enumerate(text_docs):          # Tokenization all strings and split into words
-        text_docs[idx] = clean_str(item).split()
-    
+        #text_docs[idx] = clean_str(item).split()
+        text_docs[idx] = clean_str(item)
     #label_docs = label_encoding(label_docs)         # Encoding label data
     
     return ids, label_docs, text_docs
