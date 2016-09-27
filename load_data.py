@@ -37,7 +37,7 @@ def label_encoding(labels_docs, multi_label):
     if multi_label:
         labels = df['label'].str.get_dummies(sep='*')          # Create dummies from column with multiple values                            
     else:
-        labels = df['label'].str.strip('*').str[0].str.get_dummies()       # Only take one label for each document
+        labels = df['label'].str.split('*').str[0].str.get_dummies(sep='*')       # Only take one label for each document
     return labels
 
 # Processing Data for Convolution Neural Network
